@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { userAuth, userSignUp } from '../controllers/usersController';
-import { addStock, removeStock } from '../controllers/stocksController';
+import { addStock, removeStock, getStocks } from '../controllers/stocksController';
 import jsonwebtoken, { Secret } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -52,7 +52,7 @@ const authenticateToken = (req: CustomRequest, res: Response, next: NextFunction
 
   if (token) {
     try {
-      const decodedToken = jsonwebtoken.verify(token, 'secret');
+      const decodedToken = jsonwebtoken.verify(token, secret);
 
       req.context = {
         token: decodedToken
@@ -100,5 +100,19 @@ router.delete('/remove-stock', async (req: CustomRequest, res: Response) => {
     res.status(statusCode["unauthorized"]).json({ message: statusMsg["unauthorized"] });
   }
 });
+router.get('/stocks', async (req: CustomRequest, res: Response) => {
+  const token = req.context?.token;
+  if (token) {
+    const stocks = await getStocks(token.id);
+    if(stocks !== "serverError"){
+      res.status(statusCode["success"]).json({stocks})
+    }else{
+      res.status(statusCode["serverError"]).json({"message":statusMsg["serverError"]})
+    }
+  } else {
+    res.status(statusCode["unauthorized"]).json({ message: statusMsg["unauthorized"] });
+  }
+});
+
 
 export default router
