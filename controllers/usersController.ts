@@ -3,6 +3,13 @@ import jsonwebtoken, { Secret } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import db from '../lib/db';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+
+function generateUniqueHash(data: string): string {
+  const hash = crypto.createHash('sha256');
+  hash.update(data);
+  return hash.digest('hex');
+}
 
 dotenv.config();
 
@@ -45,5 +52,42 @@ export const userAuth = async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Error executing the query:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const userSignUp = async (req: Request, res: Response) => {
+  interface HashData {
+    username: string;
+    password: string;
+    create_time: Date;
+  }
+  const { username, password }: { username: string; password: string } = req.body as {
+    username: string;
+    password: string;
+  };
+  
+  let encryptedPassword: string = '';
+  await bcrypt.hash(password, 10).then((hash) =>{
+    encryptedPassword = hash
+  });
+
+  let hashData: HashData = {
+    username,
+    password: encryptedPassword,
+    create_time: new Date(),
+  }
+  const id = generateUniqueHash(JSON.stringify(hashData));
+
+  try {
+    const query = `INSERT INTO Users(id,username,password) VALUES ('${id}','${username}','${encryptedPassword}');`;
+    await db.promise().query(query);
+    res.status(201).json({"message":"success"})
+  } catch (err:any) {
+    console.error('Error executing the query:', err);
+    if(err.code === "ER_DUP_ENTRY") {
+      res.status(400).json({ message: 'Already Exists User' });
+    }else{
+      res.status(500).json({ message: 'Server error' });
+    }
   }
 };

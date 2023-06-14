@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { userAuth } from '../controllers/usersController'
+import { userAuth, userSignUp } from '../controllers/usersController'
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -38,5 +38,6 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/login', userAuth);
+router.post('/sign-up', userSignUp);
 
 export default router
