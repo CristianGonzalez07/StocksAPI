@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import { userAuth } from '../controllers/usersController'
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -32,8 +33,10 @@ const authenticateToken = (req: CustomRequest, res: Response, next: NextFunction
 const router = express.Router();
 router.use(authenticateToken);
 
-router.get('/',  async (req, res) => {
-  return res.json({"message": `Welcome to the Stocks API! You can read the documentation at http://localhost:${port}/docs`});
- });
+router.get('/', async (req, res) => {
+  return res.json({ "message": `Welcome to the Stocks API! You can read the documentation at http://localhost:${port}/docs` });
+});
+
+router.get('/login', userAuth);
 
 export default router
