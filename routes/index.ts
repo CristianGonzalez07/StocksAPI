@@ -1,9 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { userAuth, userSignUp } from '../controllers/usersController'
-import jwt from 'jsonwebtoken';
+import { userAuth, userSignUp } from '../controllers/usersController';
+import { addStock } from '../controllers/stocksController';
+import jsonwebtoken, { Secret } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const secret: Secret = process.env.SECRET || '';
 const port = process.env.PORT;
 
 interface CustomRequest extends Request {
@@ -17,7 +19,7 @@ const authenticateToken = (req: CustomRequest, res: Response, next: NextFunction
 
   if (token) {
     try {
-      const decodedToken = jwt.verify(token, 'secret');
+      const decodedToken = jsonwebtoken.verify(token, 'secret');
 
       req.context = {
         token: decodedToken
@@ -36,8 +38,51 @@ router.use(authenticateToken);
 router.get('/', async (req, res) => {
   return res.json({ "message": `Welcome to the Stocks API! You can read the documentation at http://localhost:${port}/docs` });
 });
-
 router.get('/login', userAuth);
 router.post('/sign-up', userSignUp);
+router.put('/add-stock', async (req: CustomRequest, res: Response) => {
+  interface StatusMsg  {
+    success:string,
+    alreadyExists:string,
+    unauthorized:string,
+    serverError:string
+  }
+
+  interface StatusCode  {
+    success:number,
+    alreadyExists:number,
+    unauthorized:number,
+    serverError:number
+  }
+
+  const statusMsg: StatusMsg = {
+    success:"Success",
+    alreadyExists:"Already Exists Stock",
+    unauthorized:"Unauthorized access",
+    serverError:"Server Error"
+  }
+
+  const statusCode: StatusCode = {
+    success:201,
+    alreadyExists:400,
+    unauthorized:401,
+    serverError:500
+  }
+
+  const token = req.context?.token;
+  console.log({token})
+  if (token) {
+    const { name, symbol, currency }: { name: string; symbol: string, currency: string } = req.body as {
+      name:string
+      symbol:string
+      currency:string
+    };
+    console.log({name, symbol, currency})
+    const result = await addStock(token.id, name, symbol, currency);
+    res.status(statusCode[result]).json({"message":statusMsg[result]})
+  } else {
+    res.status(statusCode["unauthorized"]).json({ message: statusMsg["unauthorized"] });
+  }
+});
 
 export default router
