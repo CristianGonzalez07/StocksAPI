@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { userAuth, userSignUp } from '../controllers/usersController';
-import { addStock } from '../controllers/stocksController';
+import { addStock, removeStock } from '../controllers/stocksController';
 import jsonwebtoken, { Secret } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -14,6 +14,39 @@ interface CustomRequest extends Request {
   };
 }
 
+interface StatusMsg  {
+  success:string,
+  alreadyExists:string,
+  notFound:string,
+  unauthorized:string,
+  serverError:string
+}
+
+interface StatusCode  {
+  success:number,
+  alreadyExists:number,
+  notFound:number,
+  unauthorized:number,
+  serverError:number
+}
+
+const statusMsg: StatusMsg = {
+  success:"Success",
+  alreadyExists:"Already Exists",
+  notFound:"Resource Not Found",
+  unauthorized:"Unauthorized access",
+  serverError:"Server Error"
+}
+
+const statusCode: StatusCode = {
+  success:201,
+  alreadyExists:400,
+  notFound:400,
+  unauthorized:401,
+  serverError:500
+}
+
+
 const authenticateToken = (req: CustomRequest, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
 
@@ -25,7 +58,7 @@ const authenticateToken = (req: CustomRequest, res: Response, next: NextFunction
         token: decodedToken
       };
     } catch (error) {
-      // If the token is invalid, it is ignored and not added as a context
+      console.error(error)
     }
   }
 
@@ -41,44 +74,27 @@ router.get('/', async (req, res) => {
 router.get('/login', userAuth);
 router.post('/sign-up', userSignUp);
 router.put('/add-stock', async (req: CustomRequest, res: Response) => {
-  interface StatusMsg  {
-    success:string,
-    alreadyExists:string,
-    unauthorized:string,
-    serverError:string
-  }
-
-  interface StatusCode  {
-    success:number,
-    alreadyExists:number,
-    unauthorized:number,
-    serverError:number
-  }
-
-  const statusMsg: StatusMsg = {
-    success:"Success",
-    alreadyExists:"Already Exists Stock",
-    unauthorized:"Unauthorized access",
-    serverError:"Server Error"
-  }
-
-  const statusCode: StatusCode = {
-    success:201,
-    alreadyExists:400,
-    unauthorized:401,
-    serverError:500
-  }
 
   const token = req.context?.token;
-  console.log({token})
   if (token) {
     const { name, symbol, currency }: { name: string; symbol: string, currency: string } = req.body as {
       name:string
       symbol:string
       currency:string
     };
-    console.log({name, symbol, currency})
     const result = await addStock(token.id, name, symbol, currency);
+    res.status(statusCode[result]).json({"message":statusMsg[result]})
+  } else {
+    res.status(statusCode["unauthorized"]).json({ message: statusMsg["unauthorized"] });
+  }
+});
+router.delete('/remove-stock', async (req: CustomRequest, res: Response) => {
+  const token = req.context?.token;
+  if (token) {
+    const { stockID }: { stockID: string } = req.query as {
+      stockID:string
+    };
+    const result = await removeStock(token.id, stockID);
     res.status(statusCode[result]).json({"message":statusMsg[result]})
   } else {
     res.status(statusCode["unauthorized"]).json({ message: statusMsg["unauthorized"] });
