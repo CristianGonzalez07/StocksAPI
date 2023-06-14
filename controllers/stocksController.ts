@@ -1,3 +1,4 @@
+import { ResultSetHeader } from 'mysql2';
 import db from '../lib/db';
 
 
@@ -14,7 +15,24 @@ export const addStock = async (userID: string, name: string, symbol: string, cur
       return "serverError"
     }
   }
+};
 
+export const removeStock = async (userID: string, stockID: string) => {
+  interface DeleteResult {
+    affectedRows?: number;
+  }
+
+  try {
+    const query = `DELETE FROM Stocks WHERE id = '${stockID}' AND userID = '${userID}';`;
+    const [result] = await db.promise().query(query);
+    if ((result as ResultSetHeader).affectedRows === 0) {
+      return "notFound";
+    }
+    return "success"
+  } catch (err:any) {
+    console.error('Error executing the query:', err);
+    return "serverError"
+  }
 };
 
 
