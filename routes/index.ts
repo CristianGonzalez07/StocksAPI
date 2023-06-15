@@ -16,6 +16,7 @@ interface CustomRequest extends Request {
 
 interface StatusMsg  {
   success:string,
+  created:string,
   alreadyExists:string,
   notFound:string,
   unauthorized:string,
@@ -24,6 +25,7 @@ interface StatusMsg  {
 
 interface StatusCode  {
   success:number,
+  created:number,
   alreadyExists:number,
   notFound:number,
   unauthorized:number,
@@ -32,6 +34,7 @@ interface StatusCode  {
 
 const statusMsg: StatusMsg = {
   success:"Success",
+  created:"Created successfully",
   alreadyExists:"Already Exists",
   notFound:"Resource Not Found",
   unauthorized:"Unauthorized access",
@@ -39,7 +42,8 @@ const statusMsg: StatusMsg = {
 }
 
 const statusCode: StatusCode = {
-  success:201,
+  success:200,
+  created:201,
   alreadyExists:400,
   notFound:400,
   unauthorized:401,
