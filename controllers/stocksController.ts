@@ -9,7 +9,7 @@ export const addStock = async (userID: string, name: string, symbol: string, cur
   try {
     const query = `INSERT INTO Stocks(userID, name, symbol, currency) VALUES ('${userID}','${name}','${symbol}', '${currency}');`;
     await db.promise().query(query);
-    return "success"
+    return "created"
   } catch (err:any) {
     console.error('Error executing the query:', err);
     if(err.code === "ER_DUP_ENTRY") {
