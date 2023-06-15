@@ -74,6 +74,8 @@ DB_NAME=your_database_name
 
 PORT=your_port
 
+SECRET='your_jwt_secret'
+
 ```
 
 ### Usage
