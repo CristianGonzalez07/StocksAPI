@@ -37,12 +37,10 @@ export const userAuth = async (req: Request, res: Response) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (passwordMatch) {
       const token = jsonwebtoken.sign({ id: user.id, name: user.username }, secret, {
-        expiresIn: '1h',
         algorithm: 'HS256',
         noTimestamp: true,
       });
       res.json({
-        id: user.id,
         name: user.username,
         token,
       });
